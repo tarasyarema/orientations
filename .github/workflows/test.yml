@@ -1,0 +1,20 @@
+name: Test with Docker
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag orientations
+    - name: Test
+      uses: addnab/docker-run-action@1cd63ec344892b3e6174b19bde301d071a573ade
+      with:
+        image: orientations:latest
