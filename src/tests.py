@@ -1,5 +1,16 @@
-#!/usr/bin/env python
-# coding: utf-8
+# ---
+# jupyter:
+#   jupytext:
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.9.1
+#   kernelspec:
+#     display_name: SageMath 9.1
+#     language: sage
+#     name: sagemath
+# ---
 
 # - `subdivide`
 # - `gomory_hu` should be `gomory_hu_tree`
@@ -9,9 +20,9 @@
 # - `split_off_attempt` should be `splitting_off_to_capacity`
 # - `get_indicator`
 # - `split_off` should be `complete_splitting_off`
-# 
+#
 # #### TODO
-# 
+#
 # - `lovasz_simplification` should be `lovasz_decomposition`
 # - `random_orientation`
 # - `lovasz_orientation` should be `orientation`
@@ -28,21 +39,17 @@
 # - `eo_algo_3` can be removed
 # - `eo_algo_4` should be `k_orientations_iterator`
 
-# In[1]:
-
-
+# +
 from sys import exit
 from pathlib import Path
 
 # Import the actual lib
 load(f'{Path.cwd()}/lib.sage')
-
+# -
 
 # ### `subdivide` test
 
-# In[2]:
-
-
+# +
 try:
     # Given a multi-graph with two vertices
     # and n edges between them, the subdivided graph
@@ -74,13 +81,11 @@ except Exception as e:
     exit(1)
     
 print("subdivide: OK")
-
+# -
 
 # ### `gomory_hu` tests
 
-# In[3]:
-
-
+# +
 try:
     # First of all, for a simple graph we should be able to
     # call gomory_hu and get the same resulting tree
@@ -111,13 +116,11 @@ except Exception as e:
     exit(1)
     
 print("gomory_hu: OK")
-
+# -
 
 # ### connectivity tests
 
-# In[4]:
-
-
+# +
 n = 7
 
 try:
@@ -169,13 +172,11 @@ except Exception as e:
     exit(1)
     
 print("connectivity: OK")
-
+# -
 
 # ### splitting-off tests
 
-# In[5]:
-
-
+# +
 n = 7
 
 try:
@@ -260,10 +261,6 @@ except Exception as e:
     exit(1)
     
 print("splitting-off: OK")
-
-
-# In[ ]:
-
-
+# -
 
 
