@@ -6,4 +6,4 @@ COPY src/lib.sage lib.sage
 
 COPY src/tests.py tests.sage
 
-CMD ["sage", "tests.sage"]
+CMD ["sage"]
