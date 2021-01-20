@@ -13,8 +13,10 @@ Based on the following researches.
 - [`/src/lib.sage`](./src/lib.sage) contains all the source code for the orientations library.
 - [`/src/tests.ipynb`](./src/tests.ipynb) is the notebook that has all the tests for the library.
     It's a good start to get documentation about the library.
-- [`/src/tests.py`](./src/tests.py) is the exporte Python file for the `src/test.ipynb` notebook,
+- [`/src/tests.sage`](./src/tests.sage) is the exporte Python file for the `src/test.ipynb` notebook,
     which is later copied into a Docker image for testing and ci purposes.
+    This file is auto generated with a custom pre-commit hook which depends on
+    [`jupytext`](https://github.com/mwouts/jupytext).
 
 ## Run locally
 
