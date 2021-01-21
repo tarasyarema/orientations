@@ -1,6 +1,8 @@
 # Enumerating k-connected orientations
 
 ![Tests](https://github.com/tarasyarema/orientations/workflows/Test%20with%20Docker/badge.svg?branch=main)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tarasyarema/orientations/HEAD?filepath=src%2Ftests.ipynb)
+
 > This project presents an enumeration algorithm for the k-connected orientations 
     of a given multi-graph.
 
