@@ -44,7 +44,7 @@ from sys import exit
 from pathlib import Path
 
 # Import the actual lib
-load(f'{Path.cwd()}/lib.sage')
+load(f'lib.sage')
 # -
 
 # ### `subdivide` test
@@ -57,7 +57,7 @@ try:
     # Also we should be able to make the graph simple
     
     for n in range(2, 11):
-        u, v = 1, 2
+        u, v = 0, 1
         edges = [(u, v) for _ in range(n)]
         
         g = Graph({u: [v for _ in range(n)]})
@@ -69,6 +69,9 @@ try:
         
         assert len(new_g) == 2 + n
         assert len(new_g.edges()) == 2 * n
+        
+        assert len(added) == n
+        assert added == [i for i in range(2, n+2)]
         
         new_g.allow_multiple_edges(True)
         
