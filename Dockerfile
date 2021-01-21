@@ -1,9 +1,7 @@
 FROM sagemath/sagemath:latest 
 
-WORKDIR /tmp
+WORKDIR /home/sage/orientations
 
-COPY src/lib.sage lib.sage
-
-COPY src/tests.sage tests.sage
+COPY src .
 
 CMD ["sage"]
