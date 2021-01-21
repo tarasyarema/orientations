@@ -1,6 +1,6 @@
 FROM sagemath/sagemath:latest 
 
-WORKDIR /tmp/orientations
+WORKDIR /tmp
 
 COPY src .
 
