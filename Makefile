@@ -3,9 +3,11 @@ SAGE = sage
 
 all: install test
 
-docker:
+docker-build:
 	docker build . --file Dockerfile --tag orientations
-	docker run -it orientations:latest sage tests.sage
+
+docker-jupyter:
+	docker run -it -p 8888:8888 orientations:latest sage-jupyter --NotebookApp.token= --NotebookApp.password=
 
 install:
 	$(SAGE) -pip install --upgrade --no-index -v .

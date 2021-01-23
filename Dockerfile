@@ -1,11 +1,17 @@
-FROM sagemath/sagemath:latest 
+FROM sagemath/sagemath:latest-py3
 
-WORKDIR /tmp
+USER root
 
-COPY src/lib.sage lib.sage
+RUN apt-get update && apt-get install make && sage -pip install sage-package sphinx
 
-COPY src/tests.sage tests.sage
+USER sage
 
-COPY src/tests.ipynb tests.ipynb
+COPY --chown=sage:sage . ${HOME}
+
+RUN make test
+
+RUN make install
+
+RUN make docs
 
 CMD ["sage"]
