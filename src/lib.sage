@@ -1,10 +1,5 @@
 #!/usr/bin/env sage
 
-from collections import Counter
-from random import randint
-from time import time
-
-
 def subdivide(G):
     g = G.copy()
 
@@ -46,7 +41,7 @@ def subdivide(G):
     return g, added
 
 
-def gomory_hu(g, algorithm=None, added=None):
+def gomory_hu_tree(g, added=None):
     # Compute the subdivided graph
     # which has multiedged set to False already
     if added is None:
@@ -84,7 +79,7 @@ def gomory_hu(g, algorithm=None, added=None):
     return ght
 
 
-def ght_local_conn(gh_tree, u, v):
+def local_connectivity(gh_tree, u, v):
     """
     Computes the Gomory-Hu tree min. label
     in the path between u and v.
@@ -101,37 +96,25 @@ def ght_local_conn(gh_tree, u, v):
     )
 
 
-def local_edge_connectivity(G, indicator=None):
+def connectivity(G, indicator=None):
     """
     Computes the local edge connectivity
     of G using the indicator vertex given.
     """
 
-    t = gomory_hu(G)
+    t = gomory_hu_tree(G)
 
     if indicator is None:
         indicator = t.vertices()[0]
 
     return min(
-        ght_local_conn(t, indicator, other)
+        local_connectivity(t, indicator, other)
         for other in t
         if other != indicator
     )
 
 
-def max_violation(g, ght, x, indicator, req):
-    """
-    Computes the max. violation of the edge connectivity
-    requirement in the graph g.
-    """
-    return max(
-        req - ght_local_conn(ght, w, indicator)
-        for w in g.vertex_iterator()
-        if w != x and w != indicator
-    )
-
-
-def split_off_attempt(g, x, indicator, req, candidates=None, verbose=False):
+def splitting_off_to_capacity(g, x, indicator, req, candidates=None, verbose=False):
     """
     Attempt to split-off to capacity the vertex x
     with the candidates given.
@@ -174,7 +157,7 @@ def split_off_attempt(g, x, indicator, req, candidates=None, verbose=False):
 
     # Compute the maximum violation of the
     # edge connectivity requirement
-    ght = gomory_hu(h)
+    ght = gomory_hu_tree(h)
 
     if verbose:
         print(f"split_off_attempt POST")
@@ -183,7 +166,7 @@ def split_off_attempt(g, x, indicator, req, candidates=None, verbose=False):
         ght.plot(edge_labels=True).show()
 
     m_conn = min(
-        ght_local_conn(ght, indicator, w)
+        local_connectivity(ght, indicator, w)
         for w in ght
         if w != x and w != indicator
     )
@@ -200,7 +183,7 @@ def split_off_attempt(g, x, indicator, req, candidates=None, verbose=False):
     return cap if cap > 0 else 0
 
 
-def get_indicator(G, no):
+def _get_indicator(G, no):
     """
     Get a random vertex that is not in the
     iterable no.
@@ -214,7 +197,7 @@ def get_indicator(G, no):
     return None
 
 
-def split_off(G, x, req, iter_max=1000, verbose=False):
+def complete_splitting_off(G, x, req, iter_max=1000, verbose=False):
     """
     Computes the complete splitting-off sequence of x in G
     """
@@ -268,10 +251,10 @@ def split_off(G, x, req, iter_max=1000, verbose=False):
             v = C.pop()
 
             # Pick a clean indicator
-            indicator = get_indicator(H, [x])
+            indicator = _get_indicator(H, [x])
 
             # Try to split-off to capacity (xu, xv)
-            cap = split_off_attempt(H, x, indicator, req, candidates=(u, v), verbose=verbose)
+            cap = splitting_off_to_capacity(H, x, indicator, req, candidates=(u, v), verbose=verbose)
 
             # Make the real splitting-off
             # if there's margin
@@ -311,12 +294,12 @@ def split_off(G, x, req, iter_max=1000, verbose=False):
             print(f"Split({i-1}): (u, v1, v2) = ({u}, {v1}, {v2})")
 
         # Pick a clean indicator
-        indicator = get_indicator(H, [x])
+        indicator = _get_indicator(H, [x])
         if verbose:
             print(f"Split({i-1}): indicator = {indicator}")
 
         # Split-off to capacity (u, v1)
-        cap1 = split_off_attempt(H, x, indicator, req, candidates=(u, v1), verbose=verbose)
+        cap1 = splitting_off_to_capacity(H, x, indicator, req, candidates=(u, v1), verbose=verbose)
 
         if verbose:
             print(f"Split({i-1}): cap1 = {cap1}")
@@ -332,7 +315,7 @@ def split_off(G, x, req, iter_max=1000, verbose=False):
             removed += to_delete
 
         # Split-off to capacity (u, v2)
-        cap2 = split_off_attempt(H, x, indicator, req, candidates=(u, v2), verbose=verbose)
+        cap2 = splitting_off_to_capacity(H, x, indicator, req, candidates=(u, v2), verbose=verbose)
 
         if verbose:
             print(f"Split({i-1}): cap2 = {cap2}")
@@ -389,7 +372,7 @@ def split_off(G, x, req, iter_max=1000, verbose=False):
         # If there was a connectivity violation
         # we assume that situation (2) applies, i.e.
         # that (v1, v2) are contained in a tight set
-        if local_edge_connectivity(h, indicator) < req:
+        if connectivity(h, indicator) < req:
             continue
 
         # If everything went ok then situation (3) applies.
@@ -413,7 +396,13 @@ def split_off(G, x, req, iter_max=1000, verbose=False):
     return C, added, removed
 
 
-def lovasz_simplification(G, req, verbose=False):
+def lovasz_decomposition(G, req, verbose=False):
+    """
+    Uses Lovasz decomposition Theorem
+    """
+    if not G.allows_multiple_edges():
+        raise Exception('G should allow multiple edges')
+
     add, rm, rm_v = [], [], []
 
     step = 0
@@ -423,7 +412,7 @@ def lovasz_simplification(G, req, verbose=False):
 
         for e in edges:
             G.delete_edge(e)
-            if local_edge_connectivity(G) < req:
+            if connectivity(G) < req:
                 G.add_edge(e)
                 continue
 
@@ -452,8 +441,8 @@ def lovasz_simplification(G, req, verbose=False):
         # i.e., removes as many admissible pairs of (xu, xu) as possible
         should_continue = True
         for u in G.neighbor_iterator(x):
-            indicator = get_indicator(G, [x, u])
-            cap = split_off_attempt(G, x, indicator, req, candidates=(u, u), verbose=verbose)
+            indicator = _get_indicator(G, [x, u])
+            cap = splitting_off_to_capacity(G, x, indicator, req, candidates=(u, u), verbose=verbose)
 
             if cap > 0:
                 if verbose:
@@ -489,7 +478,7 @@ def lovasz_simplification(G, req, verbose=False):
 
         # Try to split-off to capacity x
         # using the Lemma 3.2 from efficient edge split.
-        C, added, removed = split_off(G, x, req, verbose=verbose)
+        C, added, removed = complete_splitting_off(G, x, req, verbose=verbose)
 
         if len(C) > 0:
             raise Exception(f"Got not empty non-admissible set C: {C}")
@@ -514,7 +503,7 @@ def lovasz_simplification(G, req, verbose=False):
         e = G.random_edge()
 
         G.delete_edge(e)
-        if local_edge_connectivity(G) < req:
+        if connectivity(G) < req:
             G.add_edge(e)
             break
 
@@ -525,21 +514,28 @@ def lovasz_simplification(G, req, verbose=False):
     return G, (add, rm, rm_v)
 
 
-def random_orientation(G):
-    G.to_directed()
+def orientation(G, k, verbose=False):
+    # Make sure we allow multiple edges
+    G.allow_multiple_edges(True)
 
-    D = DiGraph(data=[G.vertices(), []],
+    req = 2 * k
+    reduced_G, ops = lovasz_decomposition(copy(G), req, verbose=verbose)
+
+    # Generate random k-connected orientation
+    reduced_G.to_directed()
+
+    g = DiGraph(data=[reduced_G.vertices(), []],
                 format='vertices_and_edges',
-                multiedges=G.allows_multiple_edges(),
-                loops=G.allows_loops(),
-                weighted=G.weighted(),
-                pos=G.get_pos(),
-                name="Random orientation (v2) of {}".format(G.name()))
+                multiedges=reduced_G.allows_multiple_edges(),
+                loops=reduced_G.allows_loops(),
+                weighted=reduced_G.weighted(),
+                pos=reduced_G.get_pos(),
+                name=f'Random {k}-connected orientation of {reduced_G.name()}')
 
-    if hasattr(G, '_embedding'):
-        D._embedding = copy(G._embedding)
+    if hasattr(reduced_G, '_embedding'):
+        g._embedding = copy(reduced_G._embedding)
 
-    edges = G.edges()
+    edges = reduced_G.edges()
 
     from random import shuffle
     looper = [i for i in range(len(edges))]
@@ -549,22 +545,9 @@ def random_orientation(G):
         u, v, l = edges[i][0], edges[i][1], edges[i][2]
 
         if i % 2:
-            D.add_edge(u, v, l)
+            g.add_edge(u, v, l)
         else:
-            D.add_edge(v, u, l)
-
-    return D
-
-
-def lovasz_orientation(G, k, verbose=False):
-    if not G.allows_multiple_edges():
-        G.allow_multiple_edges(True)
-
-    # Simplify via Lovasz theorem
-    g, ops = lovasz_simplification(G, k, verbose=verbose)
-
-    # Generate random orientation
-    g = random_orientation(g)
+            g.add_edge(v, u, l)
 
     # Go backwards via Lovasz theorem
     for added, removed, v in zip(*ops):
@@ -586,52 +569,7 @@ def lovasz_orientation(G, k, verbose=False):
     return g
 
 
-def EnOPODS(D, F, verbose=False):
-    """
-    Parameters
-    ----------
-        D is a digraph (V, A)
-        F is a subset of edges if A
-    """
-    if Counter(D.edges()) != Counter(F):
-        a = None
-
-        # Pick a random edge from A
-        for e in D.edge_iterator():
-            if e not in F:
-                a = e
-                break
-
-        if verbose:
-            print(f"EnOPODS: F = {F}, a = {a}")
-
-        u, v, _ = a
-
-        # Call EnOPODS with the edge a in F
-        yield from EnOPODS(D.copy(), F + [a], verbose=verbose)
-
-        g = D.copy()
-        g.delete_edges(F)
-
-        path = g.shortest_path(v, u)
-        if len(path) > 1:
-            # Reverse path
-            for i in range(len(path)-1):
-                D.delete_edge(path[i], path[i+1])
-                D.add_edge(path[i+1], path[i])
-
-            D.delete_edge(a[0], a[1])
-            D.add_edge(a[1], a[0])
-
-            yield from EnOPODS(D.copy(), F + [(a[1], a[0], a[2])], verbose=verbose)
-
-    else:
-        if verbose:
-            print(f"EnOPODS: yielding!")
-        yield D.copy()
-
-
-def out_degree_sequence(D):
+def _outdegree_sequence(D):
     out_degree = []
 
     for i, v in enumerate(D):
@@ -642,16 +580,6 @@ def out_degree_sequence(D):
                 out_degree[i] += 1
 
     return out_degree
-
-
-def eo_algo_2(G, req, verbose=False):
-    D = lovasz_orientation(G, req)
-    if verbose:
-        g = D.copy()
-        g.allow_multiple_edges(False)
-        assert g.is_isomorphic(D)
-        print(f"eo_algo_2: edge conn. of D is {g.edge_connectivity()}")
-    return EnOPODS(D.copy(), list(), verbose=verbose), out_degree_sequence(D)
 
 
 def _bfs(G, u, v):
@@ -683,7 +611,7 @@ def _reverse(G, u, v):
     return path
 
 
-def is_flippable(D, u, v, req=None, step=0):
+def _is_flippable(D, u, v, req=None, step=0):
     """
     O(km) algorithm to check if the path from u to v is flippable
     """
@@ -694,7 +622,6 @@ def is_flippable(D, u, v, req=None, step=0):
     if step > req:
         return True
 
-    # O(m) complexity BFS path search
     path = _bfs(D, u, v)
 
     # Check if there still exists the path from u to v
@@ -708,33 +635,10 @@ def is_flippable(D, u, v, req=None, step=0):
         D.add_edge((x, y))
 
     # Recursive step
-    return is_flippable(D, u, v, req=req, step=step+1)
+    return _is_flippable(D, u, v, req=req, step=step+1)
 
 
-def EnODS(D, F, req=None, verbose=verbose, orientation=False):
-    if verbose:
-        print(f"EnODS: F = {F}")
-    if Counter(D) != Counter(F):
-        v = None
-        for w in D:
-            if w not in F:
-                v = w
-                break
-
-        yield from reverse_neg(D.copy(), F, v, req=req, verbose=verbose)
-        yield from reverse_pos(D.copy(), F, v, req=req, verbose=verbose)
-        yield from EnODS(D.copy(), F + [v], req=req, verbose=verbose)
-    else:
-        if verbose:
-            print(f"EnODS: yielding! ({out_degree_sequence(D)})")
-
-        if orientation:
-            yield out_degree_sequence(D)
-        else:
-            yield D.copy()
-
-
-def reverse_neg(D, F, v, req=None, seen=[], verbose=verbose, algorithm=EnODS):
+def _reverse_path_neg(D, F, v, req, seen=[], verbose=False):
     if verbose:
         print(f"Reverse-: F = {F} and v = {v} and req = {req} and seen = {seen}")
 
@@ -743,7 +647,7 @@ def reverse_neg(D, F, v, req=None, seen=[], verbose=verbose, algorithm=EnODS):
         if u == v:
             continue
 
-        if u not in F and u and is_flippable(D.copy(), v, u, req=req):
+        if u not in F and u and _is_flippable(D.copy(), v, u, req=req):
             candidate = u
             break
 
@@ -752,15 +656,15 @@ def reverse_neg(D, F, v, req=None, seen=[], verbose=verbose, algorithm=EnODS):
         if verbose:
             print(f"Reverse- ({candidate}) path: {path}")
 
-        yield from reverse_neg(D.copy(), F, v, req=req, seen=seen+[candidate], verbose=verbose, algorithm=algorithm)
-        yield from algorithm(D.copy(), F + [v], req=req, verbose=verbose)
+        yield from _reverse_path_neg(D.copy(), F, v, req, seen=seen+[candidate], verbose=verbose)
+        yield from outdegree_sequence_iterator(D.copy(), F + [v], req, verbose=verbose)
     else:
         if verbose:
             print(f"Reverse-: candidate is None")
         pass
 
 
-def reverse_pos(D, F, v, req=None, seen=[], verbose=verbose, algorithm=EnODS):
+def _reverse_path_pos(D, F, v, req, seen=[], verbose=False):
     if verbose:
         print(f"Reverse+: F = {F} and v = {v} and req = {req} and seen = {seen}")
 
@@ -769,7 +673,7 @@ def reverse_pos(D, F, v, req=None, seen=[], verbose=verbose, algorithm=EnODS):
         if u == v:
             continue
 
-        if u not in F and u and is_flippable(D.copy(), u, v, req=req):
+        if u not in F and u and _is_flippable(D.copy(), u, v, req=req):
             candidate = u
             break
 
@@ -778,44 +682,112 @@ def reverse_pos(D, F, v, req=None, seen=[], verbose=verbose, algorithm=EnODS):
         if verbose:
             print(f"Reverse+ ({candidate}) path: {path}")
 
-        yield from reverse_pos(D.copy(), F, v, req=req, seen=seen+[candidate], verbose=verbose, algorithm=algorithm)
-        yield from algorithm(D.copy(), F + [v], req=req, verbose=verbose)
+        yield from _reverse_path_pos(D.copy(), F, v, req, seen=seen+[candidate], verbose=verbose)
+        yield from outdegree_sequence_iterator(D.copy(), F + [v], req, verbose=verbose)
     else:
         if verbose:
             print(f"Reverse+: candidate is None")
         pass
 
 
-def EnODS2(D, F, req=None, verbose=False):
-    if Counter(D) != Counter(F):
-        # Pick the smallest v in V \ F
-        # as there's no linear ordering
-        # we pick any
-        v = None
-        for w in D:
-            if w not in F:
-                v = w
-                break
+def alpha_orientations_iterator(D, F, verbose=False):
+    """
+    Parameters
+    ----------
+        D is a digraph (V, A)
+        F is a subset of edges if A
+    """
+    from collections import defaultdict
 
+    # Compute the multiplicity of D
+    mults_F = defaultdict(lambda: defaultdict(lambda: 0))
+    for u, v, _ in F:
+        mults_F[u][v] += 1
+
+    a = None
+
+    # Pick a random edge from A
+    for e in D.edge_iterator():
+        u, v, _ = e
+
+        if mults_F[u][v] == 0:
+            a = e
+            break
+
+    if a is not None:
+        if verbose:
+            print(f"EnOPODS: F = {F}, a = {a}")
+
+        u, v, _ = a
+
+        # Call EnOPODS with the edge a in F
+        yield from alpha_orientations_iterator(D.copy(), F + [a], verbose=verbose)
+
+        g = D.copy()
+        g.delete_edges(F)
+
+        path = g.shortest_path(v, u)
+        if len(path) > 1:
+            # Reverse path
+            for i in range(len(path)-1):
+                D.delete_edge(path[i], path[i+1])
+                D.add_edge(path[i+1], path[i])
+
+            D.delete_edge(a[0], a[1])
+            D.add_edge(a[1], a[0])
+
+            yield from alpha_orientations_iterator(D.copy(), F + [(a[1], a[0], a[2])], verbose=verbose)
+
+    else:
+        if verbose:
+            print(f"EnOPODS: yielding!")
+        yield D.copy()
+
+
+def _differ(A, B):
+    if len(A) != len(B):
+        return True
+
+    different = True
+
+    for a, b in zip(A, B):
+        if a not in B or b not in A:
+            different = False
+            break
+
+    if different:
+        return True
+
+
+    return False
+
+
+def outdegree_sequence_iterator(D, F, req, verbose=False):
+    v = None
+
+    for w in D:
+        if w not in F:
+            v = w
+            break
+
+    if v is not None:
         if verbose:
             print(f"EnODS2: enter with F = {F} and v = {v}")
 
 
-        yield from reverse_pos(D.copy(), F, v, req=req, verbose=verbose, algorithm=EnODS2)
-        yield from reverse_neg(D.copy(), F, v, req=req, verbose=verbose, algorithm=EnODS2)
-        yield from EnODS2(D.copy(), F + [v], req=req, verbose=verbose)
+        yield from _reverse_path_pos(D.copy(), F, v, req, verbose=verbose)
+        yield from _reverse_path_neg(D.copy(), F, v, req, verbose=verbose)
+        yield from outdegree_sequence_iterator(D.copy(), F + [v], req, verbose=verbose)
     else:
         # Case then we want all
         if verbose:
-            print(f"EnODS2: yielding from EnOPODS with {out_degree_sequence(D)}")
-        yield from EnOPODS(D.copy(), [], verbose=verbose)
+            print(f"EnODS2: yielding from EnOPODS with {_outdegree_sequence(D)}")
+        yield from alpha_orientations_iterator(D.copy(), [], verbose=verbose)
 
+def k_orientations_iterator(G, k, verbose=False):
+    D = orientation(G.copy(), k, verbose=False)
 
-def eo_algo_3(G, req, verbose=False):
-    D = lovasz_orientation(G.copy(), req, verbose=False)
-    return EnODS(D.copy(), [], req=req//2, verbose=verbose, orientation=True)
+    if verbose:
+        print(f'od_seq: {_outdegree_sequence(D)}')
 
-
-def eo_algo_4(G, req, verbose=False):
-    D = lovasz_orientation(G.copy(), req, verbose=False)
-    return EnODS2(D.copy(), [], req=req//2, verbose=verbose)
+    return outdegree_sequence_iterator(D.copy(), [], k, verbose=verbose)
