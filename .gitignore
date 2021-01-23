@@ -221,3 +221,5 @@ ENV/
 /.travis_ci_gh_pages_deploy_key
 /.travis_ci_gh_pages_deploy_key.pub
 /gh-pages
+
+.pypirc
