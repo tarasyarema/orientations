@@ -1,6 +1,15 @@
 #!/usr/bin/env sage
 
 def subdivide(G):
+    r"""
+
+    TEST::
+
+    Example test
+
+        sage: 1 + 1
+        2
+    """
     g = G.copy()
 
     current = None
