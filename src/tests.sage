@@ -12,44 +12,28 @@
 #     name: sagemath
 # ---
 
-# - `subdivide`
-# - `gomory_hu` should be `gomory_hu_tree`
-# - `ght_local_conn` should be `local_connectivity`
-# - `local_edge_connectivity` should be `connectivity`
-# - `max_violation` should be `max_connectivity_violation`
-# - `split_off_attempt` should be `splitting_off_to_capacity`
-# - `get_indicator`
-# - `split_off` should be `complete_splitting_off`
+# + active=""
+# print('example-test')
+# start = time()
 #
-# #### TODO
-#
-# - `lovasz_simplification` should be `lovasz_decomposition`
-# - `random_orientation`
-# - `lovasz_orientation` should be `orientation`
-# - `EnOPODS`
-# - `out_degree_sequence`
-# - `eo_algo_2` can be removed
-# - `_bfs`
-# - `_reverse`
-# - `is_flippable`
-# - `EnODS` can be removed
-# - `reverse_neg`
-# - `reverse_pos`
-# - `EnODS2`
-# - `eo_algo_3` can be removed
-# - `eo_algo_4` should be `k_orientations_iterator`
+# try:
+#     pass
+# except Exception as e:
+#     print(f"FAIL {e}")
+#     raise e
+#     exit(1)
+#     
+# print(f'OK {time()-start:4.4f} s.')
 
 # +
-from sys import exit
-from pathlib import Path
+from time import time
 
-# Import the actual lib
 load(f'lib.sage')
-# -
-
-# ### `subdivide` test
 
 # +
+print(f'subdivide')
+start = time()
+
 try:
     # Given a multi-graph with two vertices
     # and n edges between them, the subdivided graph
@@ -80,22 +64,22 @@ try:
         for added_v in added:
             assert new_g.has_edge(u, added_v) and new_g.has_edge(added_v, v)
 except Exception as e:
-    print(f"subdivide: FAIL {e}")
+    print(f"FAIL {e}")
     exit(1)
     
-print("subdivide: OK")
-# -
-
-# ### `gomory_hu` tests
+print(f'OK {time()-start:4.4f} s.')
 
 # +
+print('gomory_hu_tree')
+start = time()
+
 try:
     # First of all, for a simple graph we should be able to
     # call gomory_hu and get the same resulting tree
     
     for n in range(3, 10):
         g = graphs.CompleteGraph(n)
-        assert gomory_hu(g) == g.gomory_hu_tree()
+        assert gomory_hu_tree(g) == g.gomory_hu_tree()
     
     # If the given graph is multiedged it should
     # handle this correctly and keep edge-connectivity
@@ -110,25 +94,31 @@ try:
     for u, v, _ in g.edges()[:n]:
         g.add_edge(u, v, None)
             
-    t = gomory_hu(g)
+    t = gomory_hu_tree(g)
     new_k = min(w for _, _, w in t.edges())
     
     assert new_k == k + 1
 except Exception as e:
-    print(f"gomory_hu: FAIL {e}")
+    print(f"FAIL {e}")
     exit(1)
     
-print("gomory_hu: OK")
-# -
-
-# ### connectivity tests
+print(f'OK {time()-start:4.4f} s.')
 
 # +
-n = 7
+print('connectivity')
+start = time()
 
 try:
+    from itertools import combinations
+    
+    g = graphs.CompleteGraph(7)
+    t = g.gomory_hu_tree()
+    all_pairs = combinations(g.vertices(), 2)
+    assert all(local_connectivity(t, u, v) == 6 for u, v in all_pairs)
+
     # For a K(n) we have that
     # \lambda(u, v) = n - 1, for all u, v
+    n = 7
     g = graphs.CompleteGraph(n)
     
     for u in g:
@@ -143,7 +133,7 @@ try:
     for u, v, _ in g.edges()[:n]:
         g.add_edge(u, v, None)
             
-    t = gomory_hu(g)
+    t = gomory_hu_tree(g)
     
     conn = None
     
@@ -154,7 +144,7 @@ try:
             if u == v:
                 continue
                 
-            current = ght_local_conn(t, u, v)
+            current = local_connectivity(t, u, v)
             conn = current if conn is None or current <= conn else conn
             
             assert current >= n
@@ -166,43 +156,22 @@ try:
     # as it supports multi-graphs.
     from networkx import edge_connectivity
     
-    got = local_edge_connectivity(g)
+    got = connectivity(g)
     want = edge_connectivity(g.networkx_graph())
     
     assert conn == got and got == want
 except Exception as e:
-    print(f"connectivity: FAIL {e}")
+    print(f"FAIL {e}")
     exit(1)
     
-print("connectivity: OK")
-# -
-
-# ### splitting-off tests
+print(f'OK {time()-start:4.4f} s.')
 
 # +
-n = 7
+print('splitting-off')
+start = time()
 
 try:
-    g = graphs.CompleteGraph(n)
-    
-    # We will remove one edge of the fisrt 
-    # vertex and we will see that the
-    # connectivity violation is 1
-    before_conn = g.edge_connectivity()
-    
-    edge = g.edges()[0]
-    g.delete_edge(edge)
-    
-    # We can pick any vertex as indicator
-    indicator = g.vertices()[0]
-    t = g.gomory_hu_tree()
-    
-    violation = max_violation(g, t, indicator, indicator, before_conn)
-    assert violation == 1
-    
-    # Now we will check that the splitting-off
-    # to capacity works.
-    #
+    n = 7
     # We want that for a given req the graph
     # after splitting to capacity the pair {2, 3}
     # satisfies the req.
@@ -210,13 +179,13 @@ try:
     
     # The initial connectivity of g will
     # be the requirement, i.e. its global.
-    req = local_edge_connectivity(g)
+    req = connectivity(g)
     
     # We split-off 1 and pick 4 as indicator
     x, indicator = 1, 4
     
     # Here we split-off to capcacity
-    cap = split_off_attempt(g, x, indicator, req, candidates=(2, 3))
+    cap = splitting_off_to_capacity(g, x, indicator, req, candidates=(2, 3))
     for _ in range(cap):
         g.delete_edges([(1, 2), (1, 3)])
         g.add_edge(2, 3)
@@ -225,7 +194,7 @@ try:
     # Compute the minimum local edge-connectivity
     # of the resulting graph via all vertex pairs
     # that do not contain x
-    t = gomory_hu(g)
+    t = gomory_hu_tree(g)
     after_conn = None
     
     for u in g:
@@ -233,7 +202,7 @@ try:
             if u == v or x in (u, v):
                 continue
                 
-            l_conn = ght_local_conn(t, u, v)
+            l_conn = local_connectivity(t, u, v)
             
             if after_conn is None or l_conn <= after_conn:
                 after_conn = l_conn
@@ -252,18 +221,208 @@ try:
     # We may pick any x
     x = g.vertices()[0]
     
-    split_off(g, x, req)
+    complete_splitting_off(g, x, req)
     
     # Check that the edge connectivity after the
     # complete splitting-off is preserved.
-    after_conn = local_edge_connectivity(g)
+    after_conn = connectivity(g)
     assert req == after_conn
 except Exception as e:
-    print(f"splitting-off: FAIL {e}")
+    print(f"FAIL {e}")
     raise e
     exit(1)
     
-print("splitting-off: OK")
+print(f'OK {time()-start:4.4f} s.')
+
+# +
+print('orientation')
+start = time()
+
+try:
+    # We know that a K_n is (n-1) connected
+    # hence the Lovasz decomposition of a K_n
+    # with odd degree such that (n-1) >= 2 should yield
+    # a (n-1) / 2 connected orientation.
+    for n in (3, 5, 7):
+        g = graphs.CompleteGraph(n)
+        g.allow_multiple_edges(True)
+        
+        req = n - 1
+        k = req // 2
+        
+        # By the Lovasz decomposition Theorem
+        # h should have 2 vertices and 2k edges
+        # connecting those vertices.
+        h, _ = lovasz_decomposition(copy(g), req, verbose=False)
+        assert len(h) == 2 and len(h.edges()) == 2 * k
+        
+        # Now let's actually generate a k-connected
+        # orientation of g
+        ori = orientation(copy(g), k)
+        
+        # The following properties should be true
+        #  1. the undirected version of ori should be g
+        #  2. ori should be k-connected
+        assert ori.to_undirected() == g
+        
+        # An orientation of K_n should not have 
+        # multiple edges
+        assert ori.has_multiple_edges() == False
+        ori.allow_multiple_edges(False)
+        
+        assert ori.edge_connectivity() == k
+    
+    for n in (4, 6, 8):
+        # When n is even it should raise an exception
+        # as the splitting-off should not work
+        
+        g = graphs.CompleteGraph(n)
+        g.allow_multiple_edges(True)
+        
+        req = n - 1
+        
+        failed = False
+        try:
+            lovasz_decomposition(copy(g), req)
+        except:
+            failed = True
+            
+        if not failed:
+            raise Exception(f'"lovasz_decomposition" should have failed for K_{n}')
+except Exception as e:
+    print(f"FAIL {e}")
+    raise e
+    exit(1)
+    
+print(f'OK {time()-start:4.4f} s.')
+
+# +
+print('enumeration-helpers')
+start = time()
+
+try:
+    g = DiGraph({
+        1: [2],
+        2: [3, 4],
+    })
+    
+    # _bfs should return correct reversed
+    # path from 1 to 4: 4 -> 2 -> 1
+    path = _bfs(g, 1, 4)
+    assert path == [4, 2, 1]
+    
+    # _reverse should return correct reversed
+    # path from 1 to 4: 4 -> 2 -> 1 and
+    # reverse it in g
+    path2 = _reverse(g, 1, 4)
+    assert path == path2
+    
+    # check that the path was actually reversed in
+    # the original graph
+    for u, v in ((1, 2), (2, 4)):
+        assert not g.has_edge(u, v) and g.has_edge(v, u)
+        
+    # Compute a 3-connected orientation of K_7
+    d = orientation(graphs.CompleteGraph(7), 3)
+    d.allow_multiple_edges(False)
+    
+    assert d.edge_connectivity() == 3
+    
+    from itertools import combinations
+    
+    # As d is 3-connected, we should be able to flip every
+    # vertex pair for k = 1 (resp. 2), as it means we can 
+    # find 2 (resp. 3) edge-disjoint paths for every pair.
+    # Also, we should not be able to flip any pair with k = 3.
+    assert all(_is_flippable(d.copy(), u, v, 1) for u, v in combinations(d.vertices(), 2))
+    assert all(_is_flippable(d.copy(), u, v, 2) for u, v in combinations(d.vertices(), 2))
+    assert all(not _is_flippable(d.copy(), u, v, 3) for u, v in combinations(d.vertices(), 2))
+except Exception as e:
+    print(f"FAIL {e}")
+    raise e
+    exit(1)
+    
+print(f'OK {time()-start:4.4f} s.')
+
+# +
+print('enumeration')
+start = time()
+
+try:
+    from sage.graphs.orientations import strong_orientations_iterator
+    
+    # For k = 1 we should get the same result as the
+    # native strong orientations iterator from Sage
+    for n in (3, 5):
+        g = graphs.CompleteGraph(n)
+        
+        new = len(list(k_orientations_iterator(g, 1)))
+        strong = len(list(strong_orientations_iterator(g))) * 2
+        
+        assert new == strong
+        
+    query = GraphQuery(
+        display_cols=['graph_id', 'num_vertices', 'edge_connectivity'], 
+        edge_connectivity=['=', 4], 
+        num_vertices=['<', 7], 
+        num_edges=['<', 15], 
+    )
+    
+    items = query.get_graphs_list()
+    max_items = 3
+    
+    from random import choices
+
+    for item in choices(items, k=max_items):
+        g = item.copy()
+        g.allow_multiple_edges(True)
+        
+        got_1, got_2 = 0, 0
+        for ori in strong_orientations_iterator(g):
+            got_1 += 1
+            
+            if ori.edge_connectivity() == 2:
+                got_2 += 1
+                
+        got_1 *= 2
+        got_2 *= 2
+        
+        want_1 = len(list(k_orientations_iterator(g.copy(), 1)))
+        want_2 = len(list(k_orientations_iterator(g.copy(), 2)))
+        
+        assert got_1 == want_1 and got_2 == want_2
+except Exception as e:
+    print(f"FAIL {e}")
+    raise e
+    exit(1)
+    
+print(f'OK {time()-start:4.4f} s.')
+
+# +
+print('enumeration-results')
+start = time()
+
+try:
+    # We know that this graph has 3842 2-connected orientations 
+    # Conclusions arXiv:1908.02050
+    g1 = {
+        1: [2, 3, 8, 9],
+        2: [3, 4, 8],
+        3: [4, 9],
+        4: [5, 6, 8, 9],
+        5: [6, 7, 8],
+        6: [7, 9],
+        7: [8, 9],
+        8: [9],
+    }
+    
+    assert len(list(k_orientations_iterator(Graph(g1), 2))) == 3842
+except Exception as e:
+    print(f"FAIL {e}")
+    raise e
+    exit(1)
+    
+print(f'OK {time()-start:4.4f} s.')
 # -
 
 
