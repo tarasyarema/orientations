@@ -1,11 +1,14 @@
-======================================
-Enumeration of k-connected orienations
-======================================
+========================================
+Enumeration of `k`-connected orienations
+========================================
 
-To use this module, you need to import it:: 
+To use this module, you need to install it via:: 
 
-    from orientations import *
+    sage -pip install orientations
 
+Once installed you can use it directly from Sage::
+
+   from orientations import *
 
 This work is licensed under a `MIT License`__.
 

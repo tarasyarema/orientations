@@ -202,6 +202,8 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
+autodoc_member_order = 'bysource'
+
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
 
@@ -210,7 +212,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 # html_theme = 'sage'
-html_theme = 'default'
+html_theme = 'sage'
 html_theme_path = ['../themes']
 
 # Theme options are theme-specific and customize the look and feel of a theme

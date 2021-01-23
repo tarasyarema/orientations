@@ -20,7 +20,6 @@ class SageTest(TestCommand):
 
 setup(
     name="orientations",
-    # the VERSION file is shared with the documentation
     version=readfile("VERSION").strip(),
     description='Enumerating k-connected orientations',
     long_description=readfile("README.md"),
@@ -32,11 +31,9 @@ setup(
     # classifiers list:
     # https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        # How mature is this project? Common values are
-        #   3 - Alpha
-        #   4 - Beta
-        #   5 - Production/Stable
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'Topic :: Scientific/Engineering :: Visualization',
     ],
     keywords="SageMath packaging",
     packages=['orientations'],

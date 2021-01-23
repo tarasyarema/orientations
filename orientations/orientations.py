@@ -3,19 +3,52 @@ Enumerating `k`-connected orientations
 
 This module is the code implemented in [TYT]_
 based of the graph work on enumerating `k`-connected
-orientations by [KKN]_.
+orientations by [SKP]_.
 
-REFERENCES:
+References
+----------
 
-.. [KKN] Kolja...
-   ...
+.. [SKP] Sarah Blind, Kolja Knauer, Petru Valicov
+    *Enumerating k-arc-connected orientations*.
+    https://arxiv.org/abs/1908.02050
+
 .. [TYT] Taras Yarema
-   *Enumerating k-connected orientations*.
-   Degree thesis, University of Barcelona, 2021.
+    *Enumerating k-connected orientations*.
+    Degree thesis, University of Barcelona, 2021.
 
-AUTHORS:
 
-- Taras Yarema, 2021.
+**This module contains the following main methods**
+
+.. csv-table::
+    :class: contentstable
+    :delim: |
+
+        :meth:`orientation` | Computes a `k`-connected orientation of `G`.
+        :meth:`k_orientations_iterator` | Returns an iterator over all `k`-connected orientations of `G`.
+
+**The following are helper functions that are exported**
+
+.. csv-table::
+    :class: contentstable
+    :delim: |
+
+        :meth:`subdivide` | Transform a multi-graph into a simple graph
+        :meth:`gomory_hu_tree` | Gomory-Hu tree implementation with multi-graph support
+        :meth:`local_connectivity` | Compute the min. edge label of a `u-v` path
+        :meth:`connectivity` | Edge-connectivity of a undirected multi-graph `G`
+        :meth:`splitting_off_to_capacity` | Split-off to capacity an edge pair
+        :meth:`complete_splitting_off` | Efficient complete splitting-off at `x`
+        :meth:`lovasz_decomposition` | Lovasz decomposition of `G`
+        :meth:`alpha_orientations_iterator` | Iterator over all `\alpha`-orientations
+        :meth:`outdegree_sequence_iterator` | Iterator over all `k`-connected outdegree sequences
+
+Authors
+-------
+
+- Taras Yarema (2021-01-24) -- initial version
+
+Methods
+-------
 """
 
 
@@ -27,10 +60,10 @@ def subdivide(G):
 
     INPUT:
 
-    - ``G`` -- a Graph that may have multiple edges.
+    - `G` -- a Graph that may have multiple edges.
 
-    OUTPUT: ``(H, C)`` where ``H`` is the subdivided
-    graph version of ``G`` and ``C`` is the list of
+    OUTPUT: `(H, C)` where `H` is the subdivided
+    graph version of `G` and `C` is the list of
     added vertices.
 
     EXAMPLES:
@@ -54,9 +87,9 @@ def subdivide(G):
         sage: H == graphs.CompleteGraph(5)
         True
 
-    Given a multi-graph with two vertices and ``n``
+    Given a multi-graph with two vertices and `n`
     edges between them, the subdivided graph should
-    have ``2 + n`` vertices ``2n`` edges. Also we
+    have `2 + n` vertices `2n` edges. Also we
     should be able to make the graph simple::
 
         sage: for n in range(2, 11):
@@ -122,9 +155,9 @@ def gomory_hu_tree(G, added=None):
 
     INPUT:
 
-    - ``G`` -- a Graph that may have multiple edges.
+    - `G` -- a Graph that may have multiple edges.
 
-    OUTPUT: ``T`` a Gomory-Hu representation of ``G``.
+    OUTPUT: `T` a Gomory-Hu representation of `G`.
 
     EXAMPLES:
 
@@ -153,7 +186,7 @@ def gomory_hu_tree(G, added=None):
     If the given graph is multiedged it should handle this
     correctly and keep edge-connectivity.
     We will then add 5 new edges and it should make the
-    ``\lambda_G'(u, v) = \lambda_G(u, v) + 1``::
+    `\lambda_G'(u, v) = \lambda_G(u, v) + 1`::
 
         sage: g = graphs.CompleteGraph(5)
         sage: k = g.edge_connectivity()
@@ -210,12 +243,12 @@ def local_connectivity(T, u, v):
 
     INPUT:
 
-    - ``T`` -- a Gomory-Hu tree.
-    - ``u`` -- a vertex of ``T``.
-    - ``v`` -- a vertex of ``T``.
+    - `T` -- a Gomory-Hu tree.
+    - `u` -- a vertex of `T`.
+    - `v` -- a vertex of `T`.
 
     OUTPUT: The local edge-connectivity between
-    ``u`` and ``v``.
+    `u` and `v`.
 
     EXAMPLES:
 
@@ -272,13 +305,13 @@ def local_connectivity(T, u, v):
 def connectivity(G, indicator=None):
     r"""
     Computes the local edge-connectivity of an
-    undirected multi-graph ``G``.
+    undirected multi-graph `G`.
 
     INPUT:
 
-    - ``G`` -- a Graph.
+    - `G` -- a Graph.
 
-    OUTPUT: The edge-connectivity of ``G``.
+    OUTPUT: The edge-connectivity of `G`.
 
     EXAMPLES:
 
@@ -319,23 +352,19 @@ def connectivity(G, indicator=None):
 
 def splitting_off_to_capacity(g, x, indicator, req, candidates=None, verbose=False):
     r"""
-    Attempt to do a splitting-off to capacity at the vertex ``x``
-    in ``G``, such that it preserves the edge-connectivity requirements
-    defined by req. The indicator is the a vertex of ``G``. If the
+    Attempt to do a splitting-off to capacity at the vertex `x`
+    in `G`, such that it preserves the edge-connectivity requirements
+    defined by req. The indicator is the a vertex of `G`. If the
     candidates are given the splitting-off is attempted with them.
 
-    Returns
-    -------
-    Computes the local edge-connectivity of an
-    undirected multi-graph ``G``.
 
     INPUT:
 
-    - ``G`` -- a Graph.
-    - ``x`` -- the vertex to split-off.
-    - ``indicator`` -- a vertex.
-    - ``candidates`` -- a pair of neighbors of ``x``.
-    - ``verbose`` -- if the users wants debugging output.
+    - `G` -- a Graph.
+    - `x` -- the vertex to split-off.
+    - `indicator` -- a vertex.
+    - `candidates` -- a pair of neighbors of `x`.
+    - `verbose` -- if the users wants debugging output.
 
     OUTPUT: The capacity of the splitting off.
 
@@ -352,7 +381,7 @@ def splitting_off_to_capacity(g, x, indicator, req, candidates=None, verbose=Fal
     We could pick any vertex (non x) as indicator, as the requirement
     is global.
     We will then compute the minimum local edge-connectivity of the resulting
-    graph via all vertex pairs that do not contain ``x``::
+    graph via all vertex pairs that do not contain `x`::
 
 
         sage: from orientations import connectivity
@@ -440,16 +469,16 @@ def splitting_off_to_capacity(g, x, indicator, req, candidates=None, verbose=Fal
 
 def _get_indicator(G, no):
     r"""
-    Gets a random vertex of ``G`` that is not in the
-    iterable ``no``. It is used to get a clean indicator
+    Gets a random vertex of `G` that is not in the
+    iterable `no`. It is used to get a clean indicator
     vertex in the complete splitting-off algorithm.
 
     INPUT:
 
-    - ``G`` -- a Graph.
-    - ``no`` -- a iterable subset of the vertices of ``G``.
+    - `G` -- a Graph.
+    - `no` -- a iterable subset of the vertices of `G`.
 
-    OUTPUTS: A vertex of ``G`` that is not in ``no``.
+    OUTPUTS: A vertex of `G` that is not in `no`.
 
     TEST::
 
@@ -468,18 +497,18 @@ def _get_indicator(G, no):
 
 def complete_splitting_off(G, x, req, verbose=False, iter_max=1000):
     r"""
-    Computes the complete splitting-off sequence of ``x`` in ``G``,
+    Computes the complete splitting-off sequence of `x` in `G`,
     such that it preserves the global edge-connectivity requirement.
 
     INPUT:
 
-    - ``G`` -- a Graph.
-    - ``x`` -- the vertex to split-off.
-    - ``req`` -- the global edge-connectivity requirement.
-    - ``verbose`` -- if the user wants debugging output.
+    - `G` -- a Graph.
+    - `x` -- the vertex to split-off.
+    - `req` -- the global edge-connectivity requirement.
+    - `verbose` -- if the user wants debugging output.
 
-    OUTPUT: ``(C, A, R)`` where ``A`` is a list with the added
-    edges and ``R`` the removed ones.
+    OUTPUT: `(C, A, R)` where `A` is a list with the added
+    edges and `R` the removed ones.
 
     EXAMPLES:
 
@@ -489,9 +518,9 @@ def complete_splitting_off(G, x, req, verbose=False, iter_max=1000):
 
     TEST:
 
-    We know that, for even n, all vertices at ``g = K(n)`` have
-    degree ``n - 1``. If we pick ``k = (n - 1) // 2``, then we
-    know that ``g`` has a vertex of degree ``2k`` and hence can
+    We know that, for even n, all vertices at `g = K(n)` have
+    degree `n - 1`. If we pick `k = (n - 1) // 2`, then we
+    know that `g` has a vertex of degree `2k` and hence can
     compute a complete splitting-off in it::
 
         sage: g = graphs.CompleteGraph(5)
@@ -711,19 +740,19 @@ def complete_splitting_off(G, x, req, verbose=False, iter_max=1000):
 def lovasz_decomposition(G, req, verbose=False):
     r"""
     Consider that the given requirement is of the form
-    ``2k`` for some ``k \geq 1``. Then this function
-    computes the decomposition of a the ``2k``-connected
-    graph ``G`` into a pair of vertices and ``2k`` edges
+    `2k` for some `k \geq 1`. Then this function
+    computes the decomposition of a the `2k`-connected
+    graph `G` into a pair of vertices and `2k` edges
     connecting them.
 
     INPUT:
 
-    - ``G`` -- a Graph.
-    - ``req`` -- the global edge-connectivity requirement.
-    - ``verbose`` -- if the user wants debugging output.
+    - `G` -- a Graph.
+    - `req` -- the global edge-connectivity requirement.
+    - `verbose` -- if the user wants debugging output.
 
-    OUTPUT: ``(H, (A, R))`` where ``H`` is a Graph with only
-    a pair of vertices and ``req`` edges connecting them.
+    OUTPUT: `(H, (A, R))` where `H` is a Graph with only
+    a pair of vertices and `req` edges connecting them.
 
     EXAMPLES:
 
@@ -733,9 +762,9 @@ def lovasz_decomposition(G, req, verbose=False):
 
     TEST:
 
-    We know that, for even n, all vertices at ``g = K(n)`` have
-    edge-connectivity ``n - 1``. Hencem the decomposed graph
-    should have ``n - 1`` edges between the two vertice::
+    We know that, for even n, all vertices at `g = K(n)` have
+    edge-connectivity `n - 1`. Hencem the decomposed graph
+    should have `n - 1` edges between the two vertice::
 
         sage: g = graphs.CompleteGraph(7)
         sage: g.allow_multiple_edges(True)
@@ -867,16 +896,16 @@ def lovasz_decomposition(G, req, verbose=False):
 
 def orientation(G, k, verbose=False):
     r"""
-    Computes an arbitrary ``k``-connected orientation
-    of the graph ``G``.
+    Computes an arbitrary `k`-connected orientation
+    of the graph `G`.
 
     INPUT:
 
-    - ``G`` -- a Graph.
-    - ``k`` -- the wanted connectivity.
-    - ``verbose`` -- if the user wants debugging output.
+    - `G` -- a Graph.
+    - `k` -- the wanted connectivity.
+    - `verbose` -- if the user wants debugging output.
 
-    OUTPUT: A ``k``-connected orientation of ``G``.
+    OUTPUT: A `k`-connected orientation of `G`.
 
     EXAMPLES:
 
@@ -886,15 +915,15 @@ def orientation(G, k, verbose=False):
 
     TEST:
 
-    We know that, for even n, all vertices at ``g = K(n)`` have
-    edge-connectivity ``n - 1``::
+    We know that, for even n, all vertices at `g = K(n)` have
+    edge-connectivity `n - 1`::
 
         sage: g = graphs.CompleteGraph(7)
         sage: g.allow_multiple_edges(True)
         sage: req, k = 6, 3
 
-    Now let's actually generate a ``k``-connected
-    orientation of ``g``::
+    Now let's actually generate a `k`-connected
+    orientation of `g`::
 
         sage: ori = orientation(g.copy(), k)
 
@@ -904,7 +933,7 @@ def orientation(G, k, verbose=False):
 
         sage: assert ori.to_undirected() == g
 
-    An orientation of ``K_n`` should not have multiple edges::
+    An orientation of `K_n` should not have multiple edges::
 
         sage: assert ori.has_multiple_edges() == False
         sage: ori.allow_multiple_edges(False)
@@ -973,9 +1002,9 @@ def _outdegree_sequence(D):
 
     INPUT:
 
-    - ``D`` -- a DiGraph.
+    - `D` -- a DiGraph.
 
-    OUTPUTS: The outdegree sequence of ``D``.
+    OUTPUTS: The outdegree sequence of `D`.
 
     EXAMPLES:
 
@@ -1010,9 +1039,9 @@ def _bfs(G, u, v):
 
     INPUT:
 
-    - ``G`` -- a Graph.
-    - ``u`` -- a vertex.
-    - ``v`` -- a vertex.
+    - `G` -- a Graph.
+    - `u` -- a vertex.
+    - `v` -- a vertex.
 
     OUTPUTS: The `u-v` path in `G` but reversed.
 
@@ -1048,13 +1077,13 @@ def _bfs(G, u, v):
 def _reverse(D, u, v):
     r"""
     Computes the BFS path from `u` to `v` and
-    reverses it in ``D``.
+    reverses it in `D`.
 
     INPUT:
 
-    - ``D`` -- a DiGraph.
-    - ``u`` -- a vertex.
-    - ``v`` -- a vertex.
+    - `D` -- a DiGraph.
+    - `u` -- a vertex.
+    - `v` -- a vertex.
 
     OUTPUTS: The `u-v` path in `G` but reversed.
 
@@ -1093,10 +1122,10 @@ def _is_flippable(D, u, v, req, step=0):
 
     INPUT:
 
-    - ``D`` -- a DiGraph.
-    - ``u`` -- a vertex.
-    - ``v`` -- a vertex.
-    - ``req`` -- the connectivity requirement.
+    - `D` -- a DiGraph.
+    - `u` -- a vertex.
+    - `v` -- a vertex.
+    - `req` -- the connectivity requirement.
 
     OUTPUTS: The `u-v` path in `G` but reversed.
 
@@ -1157,12 +1186,12 @@ def _reverse_path_neg(D, F, v, req, seen=[], verbose=False):
 
     INPUT:
 
-    - ``D`` -- a DiGraph.
-    - ``F`` -- a set of vertices.
-    - ``v`` -- a vertex.
-    - ``req`` -- the edge-connectivity requirement.
-    - ``seen`` -- ...
-    - ``verbose`` -- if the user wants debugging output.
+    - `D` -- a DiGraph.
+    - `F` -- a set of vertices.
+    - `v` -- a vertex.
+    - `req` -- the edge-connectivity requirement.
+    - `seen` -- ...
+    - `verbose` -- if the user wants debugging output.
 
     OUTPUT: An iterator.
 
@@ -1203,12 +1232,12 @@ def _reverse_path_pos(D, F, v, req, seen=[], verbose=False):
 
     INPUT:
 
-    - ``D`` -- a DiGraph.
-    - ``F`` -- a set of vertices.
-    - ``v`` -- a vertex.
-    - ``req`` -- the edge-connectivity requirement.
-    - ``seen`` -- ...
-    - ``verbose`` -- if the user wants debugging output.
+    - `D` -- a DiGraph.
+    - `F` -- a set of vertices.
+    - `v` -- a vertex.
+    - `req` -- the edge-connectivity requirement.
+    - `seen` -- ...
+    - `verbose` -- if the user wants debugging output.
 
     OUTPUT: An iterator.
 
@@ -1249,9 +1278,9 @@ def alpha_orientations_iterator(D, F=[], verbose=False):
 
     INPUT:
 
-    - ``D`` -- a DiGraph.
-    - ``F`` -- a set of vertices.
-    - ``verbose`` -- if the user wants debugging output.
+    - `D` -- a DiGraph.
+    - `F` -- a set of vertices.
+    - `verbose` -- if the user wants debugging output.
 
     OUTPUT: An iterator.
 
@@ -1318,8 +1347,8 @@ def _differ(A, B):
 
     INPUT:
 
-    - ``A`` -- an iterable.
-    - ``B`` -- an iterable.
+    - `A` -- an iterable.
+    - `B` -- an iterable.
 
     OUTPUT: If A differs from B.
 
@@ -1364,10 +1393,10 @@ def outdegree_sequence_iterator(D, F, req, verbose=False):
 
     INPUT:
 
-    - ``D`` -- a DiGraph.
-    - ``F`` -- a set.
-    - ``req`` -- the edge-connectivity requirement, `k`.
-    - ``verbose`` -- if the user wants debugging output.
+    - `D` -- a DiGraph.
+    - `F` -- a set.
+    - `req` -- the edge-connectivity requirement, `k`.
+    - `verbose` -- if the user wants debugging output.
 
     OUTPUT: An iterator.
 
@@ -1409,9 +1438,9 @@ def k_orientations_iterator(G, k, verbose=False):
 
     INPUT:
 
-    - ``G`` -- a Graph, which may have multiple edges.
-    - ``k`` -- the wanted connectivity of the orientations.
-    - ``verbose`` -- if the user wants debugging output.
+    - `G` -- a Graph, which may have multiple edges.
+    - `k` -- the wanted connectivity of the orientations.
+    - `verbose` -- if the user wants debugging output.
 
     OUTPUT: An iterator over all `k`-connected orientations of `G`.
 

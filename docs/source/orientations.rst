@@ -1,5 +1,3 @@
-.. nodoctest
-
 Orientations
 ============
 
