@@ -162,7 +162,18 @@ master_doc = 'index'
 try:
     release = get_distribution('sage-numerical-interactive-mip').version
 except DistributionNotFound:
-    release = "0.2"
+    release = "0.2.1"
+
+try:
+    def readfile(filename):
+        with open(filename,  encoding='utf-8') as f:
+            return f.read()
+
+    release = readfile("../../VERSION").strip()
+    if release[0] == 'v':
+        release = release[1:]
+except:
+    pass
 # print("############# release reported: {} ##################".format(release))
 # The short X.Y version.
 version = '.'.join(release.split('.')[:2])
