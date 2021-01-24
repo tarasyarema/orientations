@@ -10,6 +10,7 @@ docker-jupyter:
 	docker run -it -p 8888:8888 orientations:latest sage-jupyter --NotebookApp.token= --NotebookApp.password=
 
 build:
+	rm -rf dist/*
 	git describe --abbrev=0 > VERSION
 	python setup.py sdist bdist_wheel
 	twine check dist/*
