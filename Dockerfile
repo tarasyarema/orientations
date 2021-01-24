@@ -8,8 +8,6 @@ USER sage
 
 COPY --chown=sage:sage . ${HOME}
 
-RUN make test
-
 RUN make install
 
 RUN make doc
