@@ -12,6 +12,6 @@ RUN make test
 
 RUN make install
 
-RUN make docs
+RUN make doc
 
 CMD ["sage"]
